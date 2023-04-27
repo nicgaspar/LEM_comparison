@@ -60,16 +60,16 @@ _TIME_COLORS = {
 
 files = {
     "a. TTLEM: Explicit": dict(
-        panel=0, filepath="../ttlem_outputs/steady_state/exp_250_ss.txt"
+        panel=0, filepath="ttlem_outputs/steady_state/exp_250_ss.txt"
     ),
     "b. TTLEM: Implicit": dict(
-        panel=1, filepath="../ttlem_outputs/steady_state/imp_250_ss.txt"
+        panel=1, filepath="ttlem_outputs/steady_state/imp_250_ss.txt"
     ),
     "c. TTLEM: TVD_FVM": dict(
-        panel=2, filepath="../ttlem_outputs/steady_state/edge_250_ss.txt"
+        panel=2, filepath="ttlem_outputs/steady_state/edge_250_ss.txt"
     ),
     "d. Landlab: Implicit": dict(
-        panel=3, filepath="../data/landlab_raster_dt250yr_steady.txt"
+        panel=3, filepath="data/landlab_raster_dt250yr_steady.txt"
     ),
 }
 
@@ -160,20 +160,20 @@ fig2.savefig("Figure_2_slopea_area.png", dpi=300)
 
 files = {
     "a. Topography, TTLEM: Explicit": dict(
-        panel=0, filepath="../ttlem_outputs/steady_state/exp_250_ss.txt"
+        panel=0, filepath="ttlem_outputs/steady_state/exp_250_ss.txt"
     ),
     "b. Difference, TTLEM: Implicit": dict(
-        panel=1, filepath="../ttlem_outputs/steady_state/imp_250_ss.txt"
+        panel=1, filepath="ttlem_outputs/steady_state/imp_250_ss.txt"
     ),
     "c. Difference, TTLEM: TVD_FVM": dict(
-        panel=2, filepath="../ttlem_outputs/steady_state/edge_250_ss.txt"
+        panel=2, filepath="ttlem_outputs/steady_state/edge_250_ss.txt"
     ),
     "d. Difference, Landlab: Implicit": dict(
-        panel=3, filepath="../data/landlab_raster_dt250yr_steady.txt"
+        panel=3, filepath="landlab/output/landlab_raster_dt250yr_steady.txt"
     ),
 }
 
-mg, z_base = read_esri_ascii("../ttlem_outputs/steady_state/exp_250_ss.txt", name="topographic__elevation")
+mg, z_base = read_esri_ascii("ttlem_outputs/steady_state/exp_250_ss.txt", name="topographic__elevation")
 
 fig1, axes1 = plt.subplots(nrows=3, ncols=2, height_ratios=[1, 1, 0.3], figsize=(6, 6))
 
@@ -244,25 +244,25 @@ fig1.savefig("Figure_s1_steady.png", dpi=300)
 files = {
     "a. CHILD: 250 yr": dict(
         panel=0,
-        filepath="../data/child_final_grids_for_figures/child_steadystate_dt250_40401nodes.points",
+        filepath="child/outputs/child_final_grids_for_figures/child_steadystate_dt250_40401nodes.points",
         color=_TIME_COLORS["250"],
         time="250 yr",
     ),
     "b. CHILD: 2.5 kyr": dict(
         panel=1,
-        filepath="../data/child_final_grids_for_figures/child_steadystate_dt2500_40401nodes.points",
+        filepath="child/outputs/child_final_grids_for_figures/child_steadystate_dt2500_40401nodes.points",
         color=_TIME_COLORS["2500"],
         time="2.5 kyr",
     ),
     "c. CHILD: 25 kyr": dict(
         panel=2,
-        filepath="../data/child_final_grids_for_figures/child_steadystate_dt25000_40401nodes.points",
+        filepath="child/outputs/child_final_grids_for_figures/child_steadystate_dt25000_40401nodes.points",
         color=_TIME_COLORS["25000"],
         time="25 kyr",
     ),
     "d. CHILD: 100 kyr": dict(
         panel=3,
-        filepath="../data/child_final_grids_for_figures/child_steadystate_dt100000_40401nodes.points",
+        filepath="child/outputs/child_final_grids_for_figures/child_steadystate_dt100000_40401nodes.points",
         color=_TIME_COLORS["100000"],
         time="100 kyr",
     ),
@@ -386,25 +386,25 @@ fig3.savefig("Figure_3A_steady_Child.png", dpi=300)
 files = {
     "a. Landlab: 250 yr": dict(
         panel=0,
-        filepath="landlab_voronoi_dt250yr_steady.txt",
+        filepath="landlab/output/landlab_voronoi_dt250yr_steady.txt",
         color=_TIME_COLORS["250"],
         time="250 yr",
     ),
     "b. Landlab: 2.5 kyr": dict(
         panel=1,
-        filepath="landlab_voronoi_dt2500yr_steady.txt",
+        filepath="landlab/output/landlab_voronoi_dt2500yr_steady.txt",
         color=_TIME_COLORS["2500"],
         time="2.5 kyr",
     ),
     "c. Landlab: 25 kyr": dict(
         panel=2,
-        filepath="landlab_voronoi_dt25000yr_steady.txt",
+        filepath="landlab/output/landlab_voronoi_dt25000yr_steady.txt",
         color=_TIME_COLORS["25000"],
         time="25 kyr",
     ),
     "d. Landlab: 100 kyr": dict(
         panel=3,
-        filepath="landlab_voronoi_dt100000yr_steady.txt",
+        filepath="landlab/output/landlab_voronoi_dt100000yr_steady.txt",
         color=_TIME_COLORS["100000"],
         time="100 kyr",
     ),
@@ -523,7 +523,7 @@ fig3.tight_layout()
 fig3.savefig("Figure_3A_steady_landlab.png", dpi=300)
 
 #%%
-ttlem_files = glob.glob("../ttlem_outputs/steady_state/*.txt")
+ttlem_files = glob.glob("ttlem_outputs/steady_state/*.txt")
 
 fig4, axes4 = plt.subplots(nrows=2, ncols=2, height_ratios=[1, 1], figsize=(6, 6))
 
@@ -600,101 +600,3 @@ axes4.flat[-1].legend(custom_lines1, ["250 yr", "2.5 kyr", "25 kyr", "100 kyr"])
 fig4.tight_layout()
 fig4.savefig("Figure_3B_steady_TTLEM.png", dpi=300)
 
-#%% Figure 5
-
-ttlem_files = glob.glob("../ttlem_outputs/trans_outputs/*.txt")
-
-names = dict(
-    edge=dict(name="TTLEM: TVD_FVM", panel=2),
-    imp=dict(name="TTLEM: Implicit", panel=1),
-    exp=dict(name="TTLEM: Explicit", panel=0),
-)
-
-tmax=5e6
-cmap = cmocean.cm.haline
-norm = mpl.colors.Normalize(vmin=0.0, vmax=tmax)
-sm = cm.ScalarMappable(norm=norm, cmap=cmap)
-
-fig5, axes5 = plt.subplots(nrows=4, ncols=3, figsize=(7, 7))
-
-letters = "abcdefghijklmnop"
-for file in np.sort(ttlem_files):
-    print(file)
-    basename = os.path.basename(file)
-    algtime, _, sim_time = basename.split(".")[0].split("_")
-
-    if "fs" in algtime:
-        alg = "imp"
-        key = "fs"
-        col = 1
-    if "edge" in algtime:
-        alg = "edge"
-        key = "edge"
-        col = 2
-    if "exp" in algtime:
-        alg = "exp"
-        key = "exp"
-        col = 0
-
-    time = int(algtime[len(key) :])
-
-    if time == 250:
-        row = 0
-        timename = "250 yr"
-    if time == 2500:
-        row = 1
-        timename = "2.5 kyr"
-    if time == 25000:
-        row = 2
-        timename = "25 kyr"
-    if time == 100000:
-        row = 3
-        timename = "100 kyr"
-
-    color = sm.to_rgba(float(sim_time))
-
-    ax = axes5[row, col]
-
-    if int(sim_time) < tmax:
-        # if int(sim_time) % 1000000 == 0: # only plot every 1 MA for the first 10 MA.
-        mg, z = read_esri_ascii(file, name="topographic__elevation")
-        fa = FlowAccumulator(mg, flow_director="D8")
-        fa.run_one_step()
-
-        cp = ChannelProfiler(mg)
-        cp.run_one_step()
-
-        ch = ChiFinder(mg, min_drainage_area=1.0)
-        ch.calculate_chi()
-
-        da = mg.at_node["drainage_area"]
-        s = mg.at_node["topographic__steepest_slope"]
-        X = mg.at_node["channel__chi_index"]
-
-        title = letters[row * 3 + col] + ". " + names[alg]["name"] + ", " + timename
-        ax.set_title(title)
-        ax.set_ylabel("Elevation (m)")
-        ax.set_xlabel("Chi (-)")
-
-        for outlet_id, outlet_struct in cp.data_structure.items():
-            for (top_id, bottom_id), segment_struct in outlet_struct.items():
-                ids = segment_struct["ids"]
-                dists = segment_struct["distances"]
-                ax.plot(
-                    X[ids],
-                    z[ids],
-                    color=color,
-                    linewidth=0.5,
-                )
-
-plt.colorbar(
-    sm,
-    ax=axes5.flat[-1],
-    shrink=0.9,
-    orientation="horizontal",
-    anchor=(0.5, 0.9),
-    label="Time [yr]",
-)
-
-fig5.tight_layout()
-fig5.savefig("Figure_5_transient_TTLEM.png", dpi=300)

@@ -252,7 +252,7 @@ for grid_name in ["voronoi", "raster", "hex"]:
                             "maxdiff_relief": maxdiff_relief,
                         }
                     )
-                    df.to_csv("landlab_{}_dt{}yr_steady_evolution.csv".format(grid_name, dt))
+                    df.to_csv("output/landlab_{}_dt{}yr_steady_evolution.csv".format(grid_name, dt))
 
                     plt.figure(dpi=300)
                     plt.semilogy(
@@ -271,7 +271,7 @@ for grid_name in ["voronoi", "raster", "hex"]:
                     plt.xlabel("Time, 1e6 yr")
                     plt.ylabel("Metric")
                     plt.legend()
-                    plt.savefig("landlab_{}_dt{}yr_steady_evolution.pdf".format(grid_name, dt))
+                    plt.savefig("output/landlab_{}_dt{}yr_steady_evolution.pdf".format(grid_name, dt))
 
                     # save z
                     if grid_name == "raster":
@@ -303,6 +303,10 @@ for grid_name in ["voronoi", "raster", "hex"]:
 
         if run_transients:
             # Part 2: transient runs.
+
+            out_folder = "output/landlab_{}_dt{}yr_transient".format(grid_name, dt)
+            if not os.path.exists(out_folder):
+                os.mkdir(out_folder)
 
             GridConstructor = _GRIDS[grid_name][0]
             grid_kwargs = _GRIDS[grid_name][1]
@@ -357,7 +361,7 @@ for grid_name in ["voronoi", "raster", "hex"]:
                     + str(int(250))
                     + " year time steps"
                 ),
-                output="landlab_{}_dt{}yr_steady_end_of_run.png".format(grid_name, 250),
+                output="output/landlab_{}_dt{}yr_steady_end_of_run.png".format(grid_name, 250),
             )
 
             # create flow accumulator and fastscape eroder
@@ -383,11 +387,11 @@ for grid_name in ["voronoi", "raster", "hex"]:
                 if current_time % transient_output_write == 0:
                     print(grid_name, dt, "transient", current_time)
                     
-                    out_folder = "landlab_{}_dt{}yr_transient".format(grid_name, dt)
+                    out_folder = "output/landlab_{}_dt{}yr_transient".format(grid_name, dt)
                     if not os.path.exists(out_folder):
                         os.mkdir(out_folder)
                         
-                    out_file =  "landlab_{}_dt{}yr_transient/topo_transient_{}_{}_dt_at_{}yr.png".format(grid_name, dt, grid_name, dt, int(current_time))
+                    out_file =  "output/landlab_{}_dt{}yr_transient/topo_transient_{}_{}_dt_at_{}yr.png".format(grid_name, dt, grid_name, dt, int(current_time))
                     # make two plots
                     plt.figure(dpi=300)
                     imshow_grid(
@@ -403,7 +407,7 @@ for grid_name in ["voronoi", "raster", "hex"]:
                         + " year time steps, " + str(int(current_time)) + "yr",
                         output=out_file
                     )
-                    out_file =  "landlab_{}_dt{}yr_transient/diff_transient_{}_{}_dt_at_{}yr.png".format(grid_name, dt, grid_name, dt, int(current_time))
+                    out_file =  "output/landlab_{}_dt{}yr_transient/diff_transient_{}_{}_dt_at_{}yr.png".format(grid_name, dt, grid_name, dt, int(current_time))
 
                     plt.figure(dpi=300)
                     imshow_grid(
@@ -419,12 +423,6 @@ for grid_name in ["voronoi", "raster", "hex"]:
                         + " year time steps, " + str(int(current_time)) + "yr",
                         output=out_file)
                     plt.close("all")
-
-
-                    out_folder = "output/landlab_{}_dt{}yr_transient".format(grid_name, dt)
-                    if not os.path.exists(out_folder):
-                        os.mkdir(out_folder)
-
 
                     output_file = "output/landlab_{}_dt{}yr_transient/landlab_{}_dt{}yr_transient_at_{}yr.txt".format(grid_name, dt, grid_name, dt, int(current_time))
 
