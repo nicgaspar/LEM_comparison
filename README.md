@@ -1,2 +1,2 @@
 # LEM_comparison
-Codes from Gasparini, Barnhart, and Forte ESURF manuscript
+Codes from Gasparini, Forte, and Barnhart ESURF manuscript.
