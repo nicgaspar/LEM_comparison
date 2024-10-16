@@ -13,6 +13,8 @@ Created on Sat Jan 19 07:45:24 2019
 import os
 
 import matplotlib as mpl
+
+
 import matplotlib.pylab as plt
 import numpy as np
 import pandas as pd
@@ -27,7 +29,7 @@ from landlab.core.utils import argsort_points_by_x_then_y
 from landlab.io import read_esri_ascii, write_esri_ascii
 
 mpl.rcParams["pdf.fonttype"] = 42
-
+mpl.use('agg')
 # %% set constants
 
 K = 5e-6  # 1/yr
@@ -131,7 +133,7 @@ for grid_name in ["voronoi", "raster", "hex"]:
 
     for dt in dts:
 
-        # PART 1: CREATE STEADY GRIDS, IF DT == 250
+        # PART 1: CREATE STEADY GRIDS
         if run_steady:
             if True:#dt == 250:
 
@@ -303,151 +305,210 @@ for grid_name in ["voronoi", "raster", "hex"]:
 
         if run_transients:
             # Part 2: transient runs.
+            diff_max = []
+            diff_mean = []
+            diff_max_loc = []
+            diff_flux = []
 
-            out_folder = "output/landlab_{}_dt{}yr_transient".format(grid_name, dt)
-            if not os.path.exists(out_folder):
-                os.mkdir(out_folder)
+            time = []
 
-            GridConstructor = _GRIDS[grid_name][0]
-            grid_kwargs = _GRIDS[grid_name][1]
+            final_file =  "output/landlab_{}_dt{}yr_transient/topo_transient_{}_{}_dt_at_{}yr.png".format(grid_name, dt, grid_name, dt, int(total_time_transient))
+            
+            if not os.path.exists(final_file):
+                out_folder = "output/landlab_{}_dt{}yr_transient".format(grid_name, dt)
 
-            # set up grid
-            grid = GridConstructor(**grid_kwargs)
-            z = grid.add_zeros("node", "topographic__elevation")
+                if not os.path.exists(out_folder):
+                    os.mkdir(out_folder)
 
-            if grid_name == "voronoi":
-                steady_output_file = "../data/steady_state_grid_40401nodes.points"
-               
-            else:
-                steady_output_file = "output/landlab_{}_dt{}yr_steady.txt".format(grid_name, 250)
-        
-        
-            # initialize topography with end of steady runs.
-            if grid_name == "raster":
-                zinit_raster_grid, zinit = read_esri_ascii(steady_output_file)
-            elif grid_name == "hex":
-                df = pd.read_csv(steady_output_file)
-                zinit = df.z.values
+                GridConstructor = _GRIDS[grid_name][0]
+                grid_kwargs = _GRIDS[grid_name][1]
 
-            else:# grid_name == "voronoi":
-                
-                zinit = zvor_steady
-                is_core = bcvor == 0
-                is_open_boundary = bcvor == 2
+                # set up grid
+                grid = GridConstructor(**grid_kwargs)
+                z = grid.add_zeros("node", "topographic__elevation")
 
-                grid.status_at_node[is_core] = grid.BC_NODE_IS_CORE
-                grid.status_at_node[
-                    is_open_boundary
-                ] = grid.BC_NODE_IS_FIXED_VALUE
+                #use steady grid created by landlab and the same timestep
+                steady_output_file = "output/landlab_{}_dt{}yr_steady.txt".format(grid_name, dt)
+            
+            
+                # initialize topography with end of steady runs.
+                if grid_name == "raster":
+                    zinit_raster_grid, zinit = read_esri_ascii(steady_output_file)
+                else:
+                    df = pd.read_csv(steady_output_file)
+                    zinit = df.z.values
 
-                z[is_open_boundary] = 0
+                # voronoi specific boundary condition settings.
+                if grid_name == "voronoi":
+    
+                    is_core = bcvor == 0
+                    is_open_boundary = bcvor == 2
 
-                plotting_nodes = grid.core_nodes
+                    grid.status_at_node[is_core] = grid.BC_NODE_IS_CORE
+                    grid.status_at_node[
+                        is_open_boundary
+                    ] = grid.BC_NODE_IS_FIXED_VALUE
 
-            z[:] += zinit
+                    z[is_open_boundary] = 0
 
-            # save topography figure
-            plt.figure(dpi=300)
-            imshow_grid(
-                grid,
-                z,
-                cmap="terrain",
-                limits=(0, 300),
-                colorbar_label="Elevation, [m]",
-                plot_name=(
-                    "Topography after "
-                    + str(int(max_steady_total_time/250))
-                    + " "
-                    + str(int(250))
-                    + " year time steps"
-                ),
-                output="output/landlab_{}_dt{}yr_steady_end_of_run.png".format(grid_name, 250),
-            )
+                    plotting_nodes = grid.core_nodes
 
-            # create flow accumulator and fastscape eroder
-            fa = FlowAccumulator(grid)
-            fs = FastscapeEroder(grid, K_sp=K)
+                z[:] += zinit
 
-            # determine number of timesteps
-            num_ts = int(total_time_transient / dt)
+                # save topography figure
+                plt.figure(dpi=300)
+                imshow_grid(
+                    grid,
+                    z,
+                    cmap="terrain",
+                    limits=(0, 300),
+                    colorbar_label="Elevation, [m]",
+                    plot_name=(
+                        "Topography after "
+                        + str(int(max_steady_total_time/250))
+                        + " "
+                        + str(int(250))
+                        + " year time steps"
+                    ),
+                    output="output/landlab_{}_dt{}yr_steady_end_of_run.png".format(grid_name, 250),
+                )
 
-            for i in range(num_ts + 1):
+                # create flow accumulator and fastscape eroder
+                fa = FlowAccumulator(grid)
+                fs = FastscapeEroder(grid, K_sp=K)
 
-                # uplift
-                z[grid.core_nodes] += U2 * dt
+                # determine number of timesteps
+                num_ts = int(total_time_transient / dt)
+                # copy z
+                z_old = z.copy()
+                F_old = 0
+                for i in range(num_ts + 1):
+                                        
+                    # uplift
+                    z[grid.core_nodes] += U2 * dt
 
-                # route
-                fa.run_one_step()
+                    # route
+                    fa.run_one_step()
 
-                # erode
-                fs.run_one_step(dt)
-
-                current_time = dt * i
-
-                if current_time % transient_output_write == 0:
-                    print(grid_name, dt, "transient", current_time)
+                    # erode
+                    fs.run_one_step(dt)
                     
-                    out_folder = "output/landlab_{}_dt{}yr_transient".format(grid_name, dt)
-                    if not os.path.exists(out_folder):
-                        os.mkdir(out_folder)
+                    
+                    current_time = dt * i
+
+                    if current_time % transient_output_write == 0:
+                        print(grid_name, dt, "transient", current_time)
                         
-                    out_file =  "output/landlab_{}_dt{}yr_transient/topo_transient_{}_{}_dt_at_{}yr.png".format(grid_name, dt, grid_name, dt, int(current_time))
-                    # make two plots
-                    plt.figure(dpi=300)
-                    imshow_grid(
-                        grid,
-                        z,
-                        limits=(0, 1000),
-                        cmap="terrain",
-                        colorbar_label="Elevation, [m]",
-                        plot_name="Topography after "
-                        + str(i)
-                        + " "
-                        + str(dt)
-                        + " year time steps, " + str(int(current_time)) + "yr",
-                        output=out_file
-                    )
-                    out_file =  "output/landlab_{}_dt{}yr_transient/diff_transient_{}_{}_dt_at_{}yr.png".format(grid_name, dt, grid_name, dt, int(current_time))
+                        
+                        # calculate steady state characteristics
+                        zdiff = np.abs(z - z_old)
+                        
+                        # Flux calculation
+                        num_nodes = grid.core_nodes.size
+                        
+                        F_now = (U2*num_nodes) - np.sum(
+                            (z[grid.core_nodes]-z_old[grid.core_nodes])/transient_output_write)
 
-                    plt.figure(dpi=300)
-                    imshow_grid(
-                        grid,
-                        z - zinit,
-                        limits=(0, 1000),
-                        cmap="viridis",
-                        colorbar_label="Difference, [m]",
-                        plot_name="Difference from Initial after "
-                        + str(i)
-                        + " "
-                        + str(dt)
-                        + " year time steps, " + str(int(current_time)) + "yr",
-                        output=out_file)
-                    plt.close("all")
-
-                    output_file = "output/landlab_{}_dt{}yr_transient/landlab_{}_dt{}yr_transient_at_{}yr.txt".format(grid_name, dt, grid_name, dt, int(current_time))
-
-                    if grid_name == "raster":
-                        write_esri_ascii(
-                            output_file,
+                                                
+                        # change in the flux
+                        diff_flux.append(np.abs(F_now - F_old))
+                        
+                        # local change in the maxiumum 
+                        diff_max_loc.append(np.max(zdiff[grid.core_nodes]))
+                        
+                        # change in the mean
+                        diff_mean.append(
+                            np.abs(
+                                np.mean(z[grid.core_nodes])
+                                - np.mean(z_old[grid.core_nodes])
+                            )
+                        )
+                        
+                        # change in the maximum
+                        diff_max.append(
+                            np.abs(
+                                np.max(z[grid.core_nodes])
+                                - np.max(z_old[grid.core_nodes])
+                            )
+                        )
+                        time.append(current_time)
+                        
+                        # save erosion rate and z for next time calcs. 
+                        z_old = z.copy()
+                        F_old = F_now.copy()
+                        
+                        
+                        out_folder = "output/landlab_{}_dt{}yr_transient".format(grid_name, dt)
+                        if not os.path.exists(out_folder):
+                            os.mkdir(out_folder)
+                            
+                        out_file =  "output/landlab_{}_dt{}yr_transient/topo_transient_{}_{}_dt_at_{}yr.png".format(grid_name, dt, grid_name, dt, int(current_time))
+                        # make two plots
+                        plt.figure(dpi=300)
+                        imshow_grid(
                             grid,
-                            names=["topographic__elevation"],
-                            clobber=True,
+                            z,
+                            limits=(0, 1000),
+                            cmap="terrain",
+                            colorbar_label="Elevation, [m]",
+                            plot_name="Topography after "
+                            + str(i)
+                            + " "
+                            + str(dt)
+                            + " year time steps, " + str(int(current_time)) + "yr",
+                            output=out_file
                         )
-                    else:
-                        df = pd.DataFrame(
-                            {
-                                "x": grid.x_of_node,
-                                "y": grid.y_of_node,
-                                "z": z,
-                                "bc": grid.status_at_node,
-                            }
-                        )
-                        df.to_csv(output_file)
+                        out_file =  "output/landlab_{}_dt{}yr_transient/diff_transient_{}_{}_dt_at_{}yr.png".format(grid_name, dt, grid_name, dt, int(current_time))
 
-            zmaxes.append(np.max(z))
-            zdiff_maxes.append(np.max(z - zinit))
+                        plt.figure(dpi=300)
+                        imshow_grid(
+                            grid,
+                            z - zinit,
+                            limits=(0, 1000),
+                            cmap="viridis",
+                            colorbar_label="Difference, [m]",
+                            plot_name="Difference from Initial after "
+                            + str(i)
+                            + " "
+                            + str(dt)
+                            + " year time steps, " + str(int(current_time)) + "yr",
+                            output=out_file)
+                        plt.close("all")
 
-            del grid, z
+                        output_file = "output/landlab_{}_dt{}yr_transient/landlab_{}_dt{}yr_transient_at_{}yr.txt".format(grid_name, dt, grid_name, dt, int(current_time))
 
-print(max(zmaxes))
-print(max(zdiff_maxes))
+                        if grid_name == "raster":
+                            write_esri_ascii(
+                                output_file,
+                                grid,
+                                names=["topographic__elevation"],
+                                clobber=True,
+                            )
+                        else:
+                            df = pd.DataFrame(
+                                {
+                                    "x": grid.x_of_node,
+                                    "y": grid.y_of_node,
+                                    "z": z,
+                                    "bc": grid.status_at_node,
+                                }
+                            )
+                            df.to_csv(output_file)
+
+                df = pd.DataFrame(
+                    {
+                        "time": time,
+                        "diff_max": diff_max,
+                        "diff_mean": diff_mean,
+                        "diff_max_loc": diff_max_loc,
+                        "diff_flux": diff_flux,
+                    }
+                )
+
+                
+                df.to_csv("output/landlab_{}_dt{}yr_transient_evolution.csv".format(grid_name, dt))
+                    
+                zmaxes.append(np.max(z))
+                zdiff_maxes.append(np.max(z - zinit))
+
+                del grid, z
