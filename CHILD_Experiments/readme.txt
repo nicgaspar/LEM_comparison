@@ -1,4 +1,4 @@
-The SteadyState folder contains all the code to create the steady-state grids. 
+The SteadyState folder contains the input files needed to create the steady-state CHILD grids. 
 
 A poorly named experiment called testtesttest created the initial white-noise grid that was used for both the CHILD Voronoi experiments and the Landlab Voronoi experiments. The initial near-flat but slightly noisy grid can be recreated from the output using the testtesttest.inputs input file.
 
