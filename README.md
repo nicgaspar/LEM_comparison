@@ -4,4 +4,4 @@ This repository contains all the input files or codes, depending on the model, t
 
 Gasparini, N.M., Forte, A.M., and Barnhart, K.R., 2024, Short Communication: Numerically simulated time to steady state is not a reliable indicater of landsdcape response time, Earth Surface Dynamics.
 
-DOI for release 10.5281/zenodo.13984467
+DOI for release [10.5281/zenodo.13984467](https://doi.org/10.5281/zenodo.13984467)
